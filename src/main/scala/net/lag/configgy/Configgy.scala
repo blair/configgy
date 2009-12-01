@@ -119,6 +119,15 @@ object Configgy {
     }
   }
 
+  /**
+   * Temporarily configure logging with a passed-in "log" config block.
+   * Changes made to the config block *after* calling this method will
+   * not be picked up by logging.
+   */
+  def configLogging(config: ConfigMap): Unit = synchronized {
+    subscriber.commit(None, Some(config))
+  }
+
 
   private class LoggingConfigSubscriber extends Subscriber {
     @throws(classOf[ValidationException])

@@ -271,7 +271,7 @@ There are a handful of options to tune logging more directly:
 - `append` -
   set `off` to create a new logfile each time the app starts (default:
   on, meaning to append to any existing logfile)
-- `prefix_format`
+- `prefix_format` -
   customize the format of log line prefixes (see below)
 
 The logging options are usually set on the root node of java's "logging tree",
@@ -316,6 +316,43 @@ name as the second. For example, a format string of:
 will generate a log line prefix of:
 
     ERR [20080315-18:39:05.033] julius:
+
+
+### Logging with scribe
+
+A config node can be directed to a scribe server instead of, or in addition
+to, a file or console. To do this, configure a scribe server on the node:
+
+    <log>
+        scribe_server = "scribe1.corp"
+        scribe_category = "echod"
+        level = "info"
+    </log>
+
+Configgy will try to keep a persistent connection open to the designated
+scribe server, and bundle up log messages to limit the number of thrift API
+requests. If the scribe server disconnects, configgy will automatically try to
+reconnect. If the server is persistently down, configgy will only retry
+periodically, and buffer as much as it reasonably can.
+
+The following options can be set for scribe logging:
+
+- `scribe_server` -
+  scribe server hostname, with optional port number (`"localhost:9463"`)
+- `scribe_category` -
+  server name to use (default is "scala")
+- `scribe_buffer_msec` -
+  how long to buffer log messages before flushing them to the scribe server
+  (default: 100 msec)
+- `scribe_max_packet_size` -
+  maximum number of log lines to send to the scribe server in a single
+  request (default: 1000)
+- `scribe_max_buffer` -
+  maximum number of log lines to buffer for scribe before dropping them
+  (default: 10000)
+- `scribe_backoff_msec` -
+  if the scribe server goes offline, don't try to reconnect more often than
+  this (default: 15000 msec, or 15 sec)
 
 
 ## Usage from within scala

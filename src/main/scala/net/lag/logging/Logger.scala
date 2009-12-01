@@ -351,7 +351,8 @@ object Logger {
                        "syslog_use_iso_date_format", "prefix_format",
                        "use_full_package_names", "append", "scribe_server",
                        "scribe_buffer_msec", "scribe_backoff_msec",
-                       "scribe_max_packet_size")
+                       "scribe_max_packet_size", "scribe_category",
+                       "scribe_max_buffer")
     var forbidden = config.keys.filter(x => !(allowed contains x)).toList
     if (allowNestedBlocks) {
       forbidden = forbidden.filter(x => !config.getConfigMap(x).isDefined)
@@ -413,6 +414,8 @@ object Logger {
       config.getInt("scribe_buffer_msec").map { sh.bufferTimeMilliseconds = _ }
       config.getInt("scribe_backoff_msec").map { sh.connectBackoffMilliseconds = _ }
       config.getInt("scribe_max_packet_size").map { sh.maxMessagesPerTransaction = _ }
+      config.getString("scribe_category").map { sh.category = _ }
+      config.getInt("scribe_max_buffer").map { sh.maxMessagesToBuffer = _ }
       handlers = sh :: handlers
     }
 
