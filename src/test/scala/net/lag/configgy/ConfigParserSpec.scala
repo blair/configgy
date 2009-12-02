@@ -174,6 +174,15 @@ object ConfigParserSpec extends Specification {
         "beta = 19\n"
       parse(data).toString mustEqual "{: alpha=\"17\" beta=\"19\" inner={inner: further={inner.further: age=\"500\" } name=\"foo\" zipcode=\"99999\" } }"
     }
+
+    "allow whole numbers to be identifiers" in {
+      parse("1 = 2").toString mustEqual "{: 1=\"2\" }"
+      parse("1 = 2\n 3 = 4").toString mustEqual "{: 1=\"2\" 3=\"4\" }"
+      parse("20 = 1").toString mustEqual "{: 20=\"1\" }"
+      parse("2 = \"skeletor\"").toString mustEqual "{: 2=\"skeletor\" }"
+      parse("4 = \"hostname:1234\"").toString mustEqual "{: 4=\"hostname:1234\" }"
+      parse("""4 = ["a", "b"]""").toString mustEqual """{: 4=[a,b] }"""
+    }
   }
 
 
