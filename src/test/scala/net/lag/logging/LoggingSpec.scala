@@ -68,7 +68,7 @@ class TimeWarpingSyslogHandler(useIsoDateFormat: Boolean, server: String) extend
 
 class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
       extends FileHandler(filename, policy, new FileFormatter, append) {
-  formatter.timeZone = "GMT-07:00"
+  formatter.timeZone = "GMT"
 
   override def computeNextRollTime(): Long = System.currentTimeMillis + 100
 
@@ -233,7 +233,7 @@ object LoggingSpec extends Specification with TestHelper {
 
         val f2 = new BufferedReader(new InputStreamReader(new FileInputStream(folderName +
           "/test.log")))
-        f2.readLine mustEqual "FAT [20080328-22:53:16.722] whiskey: first line."
+        f2.readLine mustEqual "FAT [20080329-05:53:16.722] whiskey: first line."
       }
     }
 
@@ -319,9 +319,9 @@ object LoggingSpec extends Specification with TestHelper {
 
         val movedFilename = folderName + "/test-" + rollHandler.timeSuffix(date) + ".log"
         new BufferedReader(new InputStreamReader(new FileInputStream(movedFilename), "UTF-8")).readLine mustEqual
-          "FAT [20080328-22:53:16.722] whiskey: first file."
+          "FAT [20080329-05:53:16.722] whiskey: first file."
         new BufferedReader(new InputStreamReader(new FileInputStream(folderName + "/test.log"), "UTF-8")).readLine mustEqual
-          "FAT [20080328-22:53:16.722] whiskey: second file."
+          "FAT [20080329-05:53:16.722] whiskey: second file."
       }
     }
 
