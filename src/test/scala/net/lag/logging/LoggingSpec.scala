@@ -68,7 +68,7 @@ class TimeWarpingSyslogHandler(useIsoDateFormat: Boolean, server: String) extend
 
 class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
       extends FileHandler(filename, policy, new FileFormatter, append) {
-  formatter.timeZone = "GMT-7"
+  formatter.timeZone = "GMT-07:00"
 
   override def computeNextRollTime(): Long = System.currentTimeMillis + 100
 
