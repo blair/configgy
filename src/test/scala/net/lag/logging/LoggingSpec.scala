@@ -45,7 +45,7 @@ object Crazy {
 
 
 class TimeWarpingStringHandler extends StringHandler(new FileFormatter) {
-  formatter.timeZone = "GMT-7"
+  formatter.timeZone = "GMT"
 
   override def publish(record: javalog.LogRecord) = {
     record.setMillis(1206769996722L)
@@ -55,7 +55,7 @@ class TimeWarpingStringHandler extends StringHandler(new FileFormatter) {
 
 
 class TimeWarpingSyslogHandler(useIsoDateFormat: Boolean, server: String) extends SyslogHandler(useIsoDateFormat, server) {
-  formatter.timeZone = "GMT-7"
+  formatter.timeZone = "GMT"
 
   override def publish(record: javalog.LogRecord) = {
     record.setMillis(1206769996722L)
@@ -116,11 +116,11 @@ object LoggingSpec extends Specification with TestHelper {
     "perform basic logging" in {
       val log = Logger("")
       log.error("error!")
-      eat(handler.toString) mustEqual List("ERR [20080328-22:53:16.722] (root): error!")
+      eat(handler.toString) mustEqual List("ERR [20080329-05:53:16.722] (root): error!")
       handler.asInstanceOf[StringHandler].clear
       // must not do sprintf encoding with only one parameter.
       log.error("error-%s")
-      eat(handler.toString) mustEqual List("ERR [20080328-22:53:16.722] (root): error-%s")
+      eat(handler.toString) mustEqual List("ERR [20080329-05:53:16.722] (root): error-%s")
     }
 
     "do lazy message evaluation" in {
@@ -136,7 +136,7 @@ object LoggingSpec extends Specification with TestHelper {
       // should not generate since it's not handled:
       log.ifDebug("this is not " + getSideEffect)
 
-      eat(handler.toString) mustEqual List("ERR [20080328-22:53:16.722] (root): this is ok")
+      eat(handler.toString) mustEqual List("ERR [20080329-05:53:16.722] (root): this is ok")
       // verify that the string was generated exactly once, even tho we logged it to 2 handlers:
       callCount mustEqual 1
     }
@@ -161,16 +161,16 @@ object LoggingSpec extends Specification with TestHelper {
       log2.warning("I am also coming for you!")
 
       eat(handler.toString) mustEqual
-        List("WAR [20080328-22:53:16.722] logging: I am coming for you!",
-             "WAR [20080328-22:53:16.722] configgy: I am also coming for you!")
+        List("WAR [20080329-05:53:16.722] logging: I am coming for you!",
+             "WAR [20080329-05:53:16.722] configgy: I am also coming for you!")
 
       handler.asInstanceOf[StringHandler].clear
       handler.formatter.useFullPackageNames = true
       log1.warning("I am coming for you!")
       log2.warning("I am also coming for you!")
       eat(handler.toString) mustEqual
-        List("WAR [20080328-22:53:16.722] net.lag.logging: I am coming for you!",
-             "WAR [20080328-22:53:16.722] net.lag.configgy: I am also coming for you!")
+        List("WAR [20080329-05:53:16.722] net.lag.logging: I am coming for you!",
+             "WAR [20080329-05:53:16.722] net.lag.configgy: I am also coming for you!")
     }
 
     "log level names" in {
@@ -182,16 +182,18 @@ object LoggingSpec extends Specification with TestHelper {
       log1.error("Help!")
 
       eat(handler.toString) mustEqual
-        List("WAR [20080328-22:53:16.722] logging: I am coming for you!",
-             "DEB [20080328-22:53:16.722] logging: Loading supplies...",
-             "ERR [20080328-22:53:16.722] logging: Help!")
+        List("WAR [20080329-05:53:16.722] logging: I am coming for you!",
+             "DEB [20080329-05:53:16.722] logging: Loading supplies...",
+             "ERR [20080329-05:53:16.722] logging: Help!")
     }
 
     "use a crazy formatter" in {
-      handler.setFormatter(new GenericFormatter("%2$s <HH:mm> %1$.4s "))
+      val formatter = new GenericFormatter("%2$s <HH:mm> %1$.4s ")
+      formatter.timeZone = "GMT"
+      handler.setFormatter(formatter)
       val log = Logger.get("net.lag.logging.Skeletor")
       log.error("Help!")
-      eat(handler.toString) mustEqual List("logging 22:53 ERRO Help!")
+      eat(handler.toString) mustEqual List("logging 05:53 ERRO Help!")
     }
 
     "truncate lines" in {
@@ -200,7 +202,7 @@ object LoggingSpec extends Specification with TestHelper {
       log1.critical("Something terrible happened that may take a very long time to explain because I write crappy log messages.")
 
       eat(handler.toString) mustEqual
-        List("CRI [20080328-22:53:16.722] whiskey: Something terrible happened th...")
+        List("CRI [20080329-05:53:16.722] whiskey: Something terrible happened th...")
     }
 
     "honor append setting on logfiles" in {
@@ -247,14 +249,14 @@ object LoggingSpec extends Specification with TestHelper {
       }
 
       eat(handler.toString) mustEqual
-        List("ERR [20080328-22:53:16.722] whiskey: Exception!",
-             "ERR [20080328-22:53:16.722] whiskey: java.lang.Exception: Aie!",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     (...more...)")
+        List("ERR [20080329-05:53:16.722] whiskey: Exception!",
+             "ERR [20080329-05:53:16.722] whiskey: java.lang.Exception: Aie!",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     (...more...)")
     }
 
     "write nested stack traces" in {
@@ -267,15 +269,15 @@ object LoggingSpec extends Specification with TestHelper {
       }
 
       eat(handler.toString) mustEqual
-        List("ERR [20080328-22:53:16.722] whiskey: Exception!",
-             "ERR [20080328-22:53:16.722] whiskey: java.lang.Exception: grrrr",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle2(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.LoggingSpec$$.apply(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     (...more...)",
-             "ERR [20080328-22:53:16.722] whiskey: Caused by java.lang.Exception: Aie!",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
-             "ERR [20080328-22:53:16.722] whiskey:     (...more...)")
+        List("ERR [20080329-05:53:16.722] whiskey: Exception!",
+             "ERR [20080329-05:53:16.722] whiskey: java.lang.Exception: grrrr",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle2(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.LoggingSpec$$.apply(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     (...more...)",
+             "ERR [20080329-05:53:16.722] whiskey: Caused by java.lang.Exception: Aie!",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     at net.lag.logging.Crazy$.cycle(LoggingSpec.scala:NNN)",
+             "ERR [20080329-05:53:16.722] whiskey:     (...more...)")
     }
 
 
@@ -344,20 +346,20 @@ object LoggingSpec extends Specification with TestHelper {
 
       val p = new DatagramPacket(new Array[Byte](1024), 1024)
       serverSocket.receive(p)
-      new String(p.getData, 0, p.getLength) mustEqual "<9>2008-03-28T22:53:16 raccoon.local whiskey: fatal message!"
+      new String(p.getData, 0, p.getLength) mustEqual "<9>2008-03-29T05:53:16 raccoon.local whiskey: fatal message!"
       serverSocket.receive(p)
-      new String(p.getData, 0, p.getLength) mustEqual "<11>2008-03-28T22:53:16 raccoon.local whiskey: error message!"
+      new String(p.getData, 0, p.getLength) mustEqual "<11>2008-03-29T05:53:16 raccoon.local whiskey: error message!"
       serverSocket.receive(p)
-      new String(p.getData, 0, p.getLength) mustEqual "<12>2008-03-28T22:53:16 raccoon.local [pingd] whiskey: warning message!"
+      new String(p.getData, 0, p.getLength) mustEqual "<12>2008-03-29T05:53:16 raccoon.local [pingd] whiskey: warning message!"
       serverSocket.receive(p)
-      new String(p.getData, 0, p.getLength) mustEqual "<15>2008-03-28T22:53:16 raccoon.local whiskey: and debug!"
+      new String(p.getData, 0, p.getLength) mustEqual "<15>2008-03-29T05:53:16 raccoon.local whiskey: and debug!"
 
       log.removeHandler(syslog)
       syslog = new TimeWarpingSyslogHandler(false, "localhost:" + serverPort)
       log.addHandler(syslog)
       log.info("here's an info message with BSD time.")
       serverSocket.receive(p)
-      new String(p.getData, 0, p.getLength) mustEqual "<14>Mar 28 22:53:16 raccoon.local whiskey: here's an info message with BSD time."
+      new String(p.getData, 0, p.getLength) mustEqual "<14>Mar 29 05:53:16 raccoon.local whiskey: here's an info message with BSD time."
     }
 
 
