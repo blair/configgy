@@ -18,6 +18,7 @@ package net.lag.configgy
 
 import java.io.File
 import java.util.Properties
+import scala.collection.mutable
 import net.lag.extensions._
 
 
@@ -48,6 +49,7 @@ class RuntimeEnvironment(cls: Class[_]) {
   val jarBuild = buildProperties.getProperty("build_name", "unknown")
   val jarBuildRevision = buildProperties.getProperty("build_revision", "unknown")
   val stageName = System.getProperty("stage", "production")
+  val savedOverrides = new mutable.HashMap[String, String]
 
 
   /**
@@ -83,14 +85,23 @@ class RuntimeEnvironment(cls: Class[_]) {
       case "-f" :: filename :: xs =>
         configFilename = filename
         parseArgs(xs)
+      case "-D" :: keyval :: xs =>
+        keyval.split("=", 2).toList match {
+          case key :: value :: Nil =>
+            savedOverrides(key) = value
+            parseArgs(xs)
+          case _ =>
+            println("Unknown -D option (must be '-D key=value'): " + keyval)
+            help
+        }
       case "--help" :: xs =>
         help
       case "--version" :: xs =>
         println("%s %s (%s)".format(jarName, jarVersion, jarBuild))
-      case unknown :: Nil =>
+      case Nil =>
+      case unknown :: _ =>
         println("Unknown command-line option: " + unknown)
         help
-      case Nil =>
     }
   }
 
@@ -110,7 +121,18 @@ class RuntimeEnvironment(cls: Class[_]) {
    * block.
    */
   def load(args: Array[String]) = {
-    parseArgs(args.toList)
+    savedOverrides.clear()
+    val choppedArgs = args.flatMap { arg =>
+      if (arg.length > 2 && arg.startsWith("-D")) {
+        List("-D", arg.substring(2))
+      } else {
+        List(arg)
+      }
+    }
+    parseArgs(choppedArgs.toList)
     Configgy.configure(configFilename)
+    for ((key, value) <- savedOverrides) {
+      Configgy.config(key) = value
+    }
   }
 }

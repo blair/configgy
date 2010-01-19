@@ -421,15 +421,17 @@ object LoggingSpec extends Specification with TestHelper {
     }
 
     "build a scribe RPC call" in {
-      val scribe = new ScribeHandler(new FileFormatter)
+      val formatter = new FileFormatter
+      formatter.timeZone = "GMT"
+      val scribe = new ScribeHandler(formatter)
       scribe.category = "test"
       Logger.get("").addHandler(scribe)
       Logger.get("hello").info("This is a message.")
       Logger.get("hello").info("This is another message.")
       scribe.makeBuffer(2).array.hexlify mustEqual "000000b080010001000000034c6f67000000000f0001" +
-        "0c000000020b000100000004746573740b000200000036494e46205b32303038303332382d32323a35333a3" +
+        "0c000000020b000100000004746573740b000200000036494e46205b32303038303332392d30353a35333a3" +
         "1362e3732325d2068656c6c6f3a20546869732069732061206d6573736167652e0a000b0001000000047465" +
-        "73740b00020000003c494e46205b32303038303332382d32323a35333a31362e3732325d2068656c6c6f3a2" +
+        "73740b00020000003c494e46205b32303038303332392d30353a35333a31362e3732325d2068656c6c6f3a2" +
         "05468697320697320616e6f74686572206d6573736167652e0a0000"
     }
 
