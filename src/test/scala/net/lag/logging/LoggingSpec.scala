@@ -105,12 +105,13 @@ object LoggingSpec extends Specification with TestHelper {
     }
 
     "provide level name and value maps" in {
-      Logger.levels mustEqual Map(Level.TRACE.value -> Level.TRACE, Level.DEBUG.value -> Level.DEBUG,
-        Level.INFO.value -> Level.INFO, Level.WARNING.value -> Level.WARNING, Level.ERROR.value -> Level.ERROR,
-        Level.CRITICAL.value -> Level.CRITICAL, Level.FATAL.value -> Level.FATAL)
-      Logger.levelNames mustEqual Map("TRACE" -> Level.TRACE, "DEBUG" -> Level.DEBUG,
+      Logger.levels mustEqual Map(Level.ALL.value -> Level.ALL, Level.TRACE.value -> Level.TRACE, 
+        Level.DEBUG.value -> Level.DEBUG, Level.INFO.value -> Level.INFO, Level.WARNING.value -> Level.WARNING, 
+        Level.ERROR.value -> Level.ERROR, Level.CRITICAL.value -> Level.CRITICAL, Level.FATAL.value -> Level.FATAL, 
+        Level.OFF.value -> Level.OFF)
+      Logger.levelNames mustEqual Map("ALL" -> Level.ALL, "TRACE" -> Level.TRACE, "DEBUG" -> Level.DEBUG,
         "INFO" -> Level.INFO, "WARNING" -> Level.WARNING, "ERROR" -> Level.ERROR,
-        "CRITICAL" -> Level.CRITICAL, "FATAL" -> Level.FATAL)
+        "CRITICAL" -> Level.CRITICAL, "FATAL" -> Level.FATAL, "OFF" -> Level.OFF)
     }
 
     "perform basic logging" in {

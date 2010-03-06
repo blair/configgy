@@ -214,6 +214,7 @@ object Logger {
   def ALL = Level.ALL
 
   // to force them to get loaded from class files:
+  root.setLevel(OFF)
   root.setLevel(FATAL)
   root.setLevel(CRITICAL)
   root.setLevel(ERROR)
@@ -221,6 +222,7 @@ object Logger {
   root.setLevel(INFO)
   root.setLevel(DEBUG)
   root.setLevel(TRACE)
+  root.setLevel(ALL)
   reset
 
 
@@ -325,7 +327,7 @@ object Logger {
     val e = manager.getLoggerNames
     while (e.hasMoreElements) {
       val item = manager.getLogger(e.nextElement.asInstanceOf[String])
-      loggers += get(item.getName())
+      if (item ne null) loggers += get(item.getName)
     }
     loggers.elements
   }

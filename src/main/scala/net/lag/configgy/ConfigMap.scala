@@ -18,6 +18,7 @@ package net.lag.configgy
 
 import scala.collection.Map
 import scala.util.Sorting
+import net.lag.logging.Logger
 
 
 class ConfigException(reason: String) extends Exception(reason)
@@ -331,6 +332,32 @@ trait ConfigMap {
    */
   def toConfigString: String
 
+  def copyInto(obj: AnyRef) {
+    val cls = obj.getClass
+    val log = Logger.get(cls)
+    val methods = cls.getMethods().filter { method =>
+      method.getName().endsWith("_$eq") && method.getParameterTypes().size == 1
+    }.toList
+    keys.foreach { key =>
+      val setters = methods.filter { _.getName() == key + "_$eq" }
+      if (setters.size == 0) {
+        log.warning("Ignoring config key '%s' which doesn't have a setter in class %s", key, cls)
+      }
+      setters.foreach { method =>
+        val expectedType = method.getParameterTypes().first.getCanonicalName
+        val param = expectedType match {
+          case "int" => getInt(key)
+          case "long" => getLong(key)
+          case "float" => getDouble(key).map { _.toFloat }
+          case "double" => getDouble(key)
+          case "boolean" => getBool(key)
+          case "java.lang.String" => getString(key)
+          case _ => None // ignore for now
+        }
+        param.map { p => method.invoke(obj, p.asInstanceOf[Object]) }
+      }
+    }
+  }
 
   /**
    * If the requested key is present, return its value as a string. Otherwise, throw a

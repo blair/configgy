@@ -123,9 +123,10 @@ class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(n
   }
 
   def serverName = formatter.serverName
-  def serverName_=(name: String) = {
+  def serverName_=(name: String) {
     formatter.serverName = name
   }
+
   def clearServerName = formatter.clearServerName
 
   def publish(record: javalog.LogRecord) = synchronized {
@@ -134,9 +135,8 @@ class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(n
       val packet = new DatagramPacket(data, data.length, dest)
       socket.send(packet)
     } catch {
-      case e => {
+      case e =>
         System.err.println(Formatter.formatStackTrace(e, 30).mkString("\n"))
-      }
     }
   }
 }

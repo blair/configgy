@@ -58,7 +58,7 @@ This is all you need to know to use the library:
     
     // read hostname and port:
     val config = Configgy.config
-    val hostname = config.get("hostname", "localhost")
+    val hostname = config.getString("hostname", "localhost")
     val port = config.getInt("port", 3000)
     
     // log an error:
@@ -67,19 +67,19 @@ This is all you need to know to use the library:
     
     // or an exception:
     try {
-        ...
+      ...
     } catch {
-        case e: IOException => log.error(e, "IOException while doodling")
+      case e: IOException => log.error(e, "IOException while doodling")
     }
 
 The following config file will setup a logfile at debug level, that rolls
 every night, and also sets a few simple config values:
 
-    <log>
-        filename = "/var/log/pingd.log"
-        roll = "daily"
-        level = "debug"
-    </log>
+    log {
+      filename = "/var/log/pingd.log"
+      roll = "daily"
+      level = "debug"
+    }
     
     hostname = "pingd.example.com"
     port = 3000
@@ -123,9 +123,17 @@ String lists are just strings enclosed in brackets, separated by commas:
 Groups of keys may be enclosed in an XML-like tag:
 
     <pingd>
-        # set a high timeout for now.
-        timeout = 30
+      # set a high timeout for now.
+      timeout = 30
     </pingd>
+
+or in a block with curly braces:
+
+    pingd {
+      # set a high timeout for now.
+      timeout = 30
+    }
+
 
 Nested values can be accessed from the API and from within the config file
 as if they were in C structs, using dotted-name notation. So the above config is the same as:
@@ -191,11 +199,11 @@ reopened as a new file.
 
 So, for example:
 
-    <log>
-        filename = "test.log"
-        level = "warning"
-        roll = "tuesday"
-    </log>
+    log {
+      filename = "test.log"
+      level = "warning"
+      roll = "tuesday"
+    }
 
 creates a logfile `test.log` that captures log entries only at warning,
 error, critical, or fatal levels. It's rolled once a week, at midnight on
@@ -238,13 +246,19 @@ file), use shell syntax:
 Common config blocks can be inherited by later blocks:
 
     <daemon-base>
-        timeout = 15
-        chroot = "/opt/magic"
+      timeout = 15
+      chroot = "/opt/magic"
     </daemon-base>
     
     <pingd inherit="daemon-base">
-        timeout = 30
+      timeout = 30
     </ping>
+
+or:
+
+    pingd (inherit="daemon-base") {
+      timeout = 30
+    }
 
 The pingd block will use its own value of "timeout" (30), but will inherit
 "chroot" from daemon-base. That is, "pingd.chroot" will be "/opt/magic".
@@ -278,16 +292,16 @@ The logging options are usually set on the root node of java's "logging tree",
 at "". You can set options or logging handlers at other nodes by putting them
 in config blocks inside `<log>`. For example:
 
-    <log>
-        filename = "test.log"
-        level = "warning"
-        utc = true
-        
-        <squelch_noisy>
-            node = "com.example.libnoise"
-            level = "critical"
-        </squelch_noisy>
-    </log>
+    log {
+      filename = "test.log"
+      level = "warning"
+      utc = true
+      
+      squelch_noisy {
+        node = "com.example.libnoise"
+        level = "critical"
+      }
+    }
 
 (You don't have to name the block "squelch_noisy"; they can have any name.)
 
@@ -323,11 +337,11 @@ will generate a log line prefix of:
 A config node can be directed to a scribe server instead of, or in addition
 to, a file or console. To do this, configure a scribe server on the node:
 
-    <log>
-        scribe_server = "scribe1.corp"
-        scribe_category = "echod"
-        level = "info"
-    </log>
+    log {
+      scribe_server = "scribe1.corp"
+      scribe_category = "echod"
+      level = "info"
+    }
 
 Configgy will try to keep a persistent connection open to the designated
 scribe server, and bundle up log messages to limit the number of thrift API
@@ -400,7 +414,7 @@ Or you can access the intermediate `ConfigMap` object:
     scala> config.getConfigMap("pingd")
     res1: Option[net.lag.configgy.ConfigMap] = Some({pingd: port="3000" })
 
-    scala> config.getConfigMap("pingd").get.getInt("port")
+    scala> config.configMap("pingd").getInt("port")
     res2: Option[Int] = Some(3000)
 
 
@@ -441,10 +455,10 @@ as adding some convenience methods:
     log.info("Starting compaction on level %d...", level)
     
     try {
-        ...
+      ...
     } catch {
-        // log an exception backtrace with the message:
-        case x: IOException => log.info(x, "I/O exception: %s", x.getMessage)
+      // log an exception backtrace with the message:
+      case x: IOException => log.info(x, "I/O exception: %s", x.getMessage)
     }
 
 Each of the log levels (from "fatal" to "trace") has these two convenience
@@ -463,6 +477,11 @@ to the logging level before formatting. If no log message would be written to
 any file or device, then no formatting is done and the arguments are thrown
 away. That makes it very inexpensive to include excessive debug logging which
 can be turned off without recompiling and re-deploying.
+
+If you prefer, there are also variants that take lazy-evaluated parameters,
+and only evaluate them if logging is active at that level:
+
+    log.ifDebug("Login from " + name + " at " + date + ".")
 
 The logging classes are done as an extension to the `java.util.logging` API,
 and so if you want to use the java interface directly, you can. Each of the
